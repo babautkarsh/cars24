@@ -40,9 +40,33 @@ export class AuthService {
   async login(user: any) {
     const payload = { username: user.username, sub: user.userId };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
       username: user.username,
       role: user.role,
     };
+  }
+
+  async generateRefreshToken(user: any, ipAddress: string): Promise<string> {
+    const payload = { sub: user.id, ip: ipAddress };
+    return this.jwtService.signAsync(payload, {
+      expiresIn: '7d', // Refresh token expiration time
+      secret: process.env.JWT_REFRESH_SECRET, // Use a different secret for refresh tokens
+    });
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    try {
+      const decoded = this.jwtService.verify(refreshToken);
+
+      const accessToken = this.jwtService.sign(
+        { username: decoded.username, sub: decoded.sub },
+        { expiresIn: '15m' },
+      );
+      return {
+        accessToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }

@@ -40,6 +40,13 @@ export class AuthController {
     return token;
   }
 
+  @Post('refresh')
+  @Post('refresh-token')
+  async refreshToken(@Request() req) {
+    const refreshToken = req.body.refreshToken;
+    return this.authService.refreshAccessToken(refreshToken);
+  }
+
   @Get('profile')
   @ApiBearerAuth()
   @ApiBody({ type: String })
